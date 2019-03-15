@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 )
 
 var SpecialChars = []rune("[{}\"/$\\_`~&+,:;=?@#|'<>.-^*()%!]")
@@ -30,7 +31,7 @@ func getPasswordConfigs(w http.ResponseWriter, r *http.Request) {
 	var passwordConfigs PasswordConfig
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if err := json.Unmarshal(body, &passwordConfigs); err != nil {
@@ -38,11 +39,16 @@ func getPasswordConfigs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := Response{
-		generatePassword(passwordConfigs),
+	response, err := generatePassword(passwordConfigs)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
-	resp, err := json.Marshal(response)
+	responseInstance := Response{
+		response,
+	}
+	resp, err := json.Marshal(responseInstance)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -54,8 +60,12 @@ func getPasswordConfigs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 }
 
-func generatePassword(configs PasswordConfig) string {
-	var result = []rune("")
+func generatePassword(configs PasswordConfig) (string, error) {
+	var result []rune
+
+	if configs.MinLength < 0 || configs.NumberAmount < 0 || configs.SpecialCharsAmount < 0 {
+		return "", errors.New("Parameter's value can't be less than 0")
+	}
 
 	for i := 0; i < configs.NumberAmount; i++ {
 		result = append(result, getRandomValue(Numbers))
@@ -78,7 +88,7 @@ func generatePassword(configs PasswordConfig) string {
 		}
 	}
 
-	return string(shuffleSlice(result))
+	return string(shuffleSlice(result)), nil
 }
 
 func getRandomValue(runeSlice []rune) rune{
