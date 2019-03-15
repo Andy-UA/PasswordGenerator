@@ -1,5 +1,13 @@
 package main
 
+// make packages: api (handler, middleware), domain (structs), service (PasswordGenerator), cmd (cli for access to service)
+// structure cmd(server(main.go), cli(main.go), api(), domain(), service())
+// optional: Package cobra
+// add DockerFile to build image for server and cli
+// add MakeFile, which would call docker and run container
+// test coverage (unit tests)
+// use goModule (create VendorFolder)
+
 import (
 	"encoding/json"
 	"fmt"
@@ -14,7 +22,7 @@ import (
 var SpecialChars = []rune("[{}\"/$\\_`~&+,:;=?@#|'<>.-^*()%!]")
 var Numbers = []rune("1234567890")
 var Letters = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
-var Vowels = []rune("AEIOUYaeiouy")
+var Vowels = []rune("AEIOUYaeiouy") //should be as map of empy structs
 
 type PasswordConfig struct {
 	MinLength          int
@@ -34,6 +42,7 @@ func getPasswordConfigs(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	defer r.Body.Close() //check on error
 	if err := json.Unmarshal(body, &passwordConfigs); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -57,7 +66,6 @@ func getPasswordConfigs(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
 }
 
 func generatePassword(configs PasswordConfig) (string, error) {
@@ -75,8 +83,7 @@ func generatePassword(configs PasswordConfig) (string, error) {
 		result = append(result, getRandomValue(SpecialChars))
 	}
 
-	loopRange := configs.MinLength + rand.Intn(20)
-	for i := 0; i < loopRange; i++ {
+	for i := 0; i < configs.MinLength + rand.Intn(20); i++ {
 		result = append(result, getRandomValue(Letters))
 	}
 
@@ -95,16 +102,21 @@ func getRandomValue(runeSlice []rune) rune{
 	return runeSlice[rand.Intn(len(runeSlice))]
 }
 
+//rewrite shuffle
 func shuffleSlice(runeSlice []rune) []rune {
+	//res := make([]rune, len(runeSlice))
 	for i := 0; i < len(runeSlice); i++ {
 		tmp := runeSlice[rand.Intn(len(runeSlice))]
-		tmp, runeSlice[i] = runeSlice[i], tmp
+		//res[i] =
+		runeSlice[i], tmp = tmp, runeSlice[i]
 	}
 	return runeSlice
+	//return res
 }
 
 func main() {
 	router := mux.NewRouter()
+	//add middleware to validate request and use context for passing valid data
 	router.HandleFunc("/generate", getPasswordConfigs).Methods("POST")
 	log.Fatal(http.ListenAndServe(":8000", router))
 }
