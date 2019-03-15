@@ -2,13 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 )
 
 var SpecialChars = []rune("[{}\"/$\\_`~&+,:;=?@#|'<>.-^*()%!]")
@@ -64,7 +64,7 @@ func generatePassword(configs PasswordConfig) (string, error) {
 	var result []rune
 
 	if configs.MinLength < 0 || configs.NumberAmount < 0 || configs.SpecialCharsAmount < 0 {
-		return "", errors.New("Parameter's value can't be less than 0")
+		return "", fmt.Errorf("parameter's value can't be less than 0")
 	}
 
 	for i := 0; i < configs.NumberAmount; i++ {
