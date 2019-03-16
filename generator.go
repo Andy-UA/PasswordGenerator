@@ -102,16 +102,13 @@ func getRandomValue(runeSlice []rune) rune{
 	return runeSlice[rand.Intn(len(runeSlice))]
 }
 
-//rewrite shuffle
 func shuffleSlice(runeSlice []rune) []rune {
-	//res := make([]rune, len(runeSlice))
-	for i := 0; i < len(runeSlice); i++ {
-		tmp := runeSlice[rand.Intn(len(runeSlice))]
-		//res[i] =
-		runeSlice[i], tmp = tmp, runeSlice[i]
+	res := make([]rune, len(runeSlice))
+	perm := rand.Perm(len(runeSlice))
+	for i, randIndex := range perm {
+		res[i] = runeSlice[randIndex]
 	}
-	return runeSlice
-	//return res
+	return res
 }
 
 func main() {
