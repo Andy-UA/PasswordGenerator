@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 
+	"../../api"
 	"../../domain"
 	"../../service"
 )
@@ -18,7 +19,7 @@ func main() {
 		return
 	}
 
-	var convertedArgs []int
+	convertedArgs := make([]int, 3)
 	for _, v := range argsWithoutName {
 		num, err := strconv.Atoi(v)
 		if err != nil {
@@ -32,6 +33,10 @@ func main() {
 		MinLength: convertedArgs[0],
 		SpecialCharsAmount: convertedArgs[1],
 		NumberAmount: convertedArgs[2],
+	}
+
+	if err := api.CheckBodyContent(passwordConfigs); err != nil {
+		return
 	}
 
 	fmt.Printf("Generated password - %v", service.GeneratePassword(passwordConfigs))
