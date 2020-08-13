@@ -1,7 +1,7 @@
 package main
 
 import (
-	"../../api"
+	"PasswordGenerator/api"
 	"log"
 	"net/http"
 )

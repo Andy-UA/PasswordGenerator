@@ -1,39 +1,37 @@
 package api
 
 import (
+	"PasswordGenerator/domain"
+	"PasswordGenerator/service"
+
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
-
-	"../domain"
-	"../service"
 )
 
 func getPasswordConfigs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	//check on error defer r.Body.Close() (https://golang.org/pkg/net/http/#Request - The Server will close the request body. The ServeHTTP Handler does not need to.)
-
-	if configs := r.Context().Value("passwordConfig"); configs != nil {
-
-		response := service.GeneratePassword(configs.(domain.PasswordConfig))
-
-		responseInstance := domain.Response{
-			GeneratedPassword: response,
-		}
-		resp, err := json.Marshal(responseInstance)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		if _, err := w.Write(resp); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	} else {
+	configs := r.Context().Value("passwordConfig")
+	if configs == nil {
 		http.Error(w, "Context is empty", http.StatusInternalServerError)
+		return
+	}
+
+	response := service.GeneratePassword(configs.(domain.PasswordConfig))
+	responseInstance := domain.Response{
+		GeneratedPassword: response,
+	}
+	resp, err := json.Marshal(responseInstance)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if _, err := w.Write(resp); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -70,18 +68,11 @@ func bodyContentHandler(next http.Handler) http.Handler {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		if err = CheckBodyContent(passwordConfigs); err != nil {
+		if err = service.CheckBodyContent(passwordConfigs); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), "passwordConfig", passwordConfigs)))
 	})
-}
-
-func CheckBodyContent(configs domain.PasswordConfig) error {
-	if configs.MinLength < 0 || configs.NumberAmount < 0 || configs.SpecialCharsAmount < 0 {
-		return fmt.Errorf("parameter's value can't be less than 0")
-	}
-	return nil
 }

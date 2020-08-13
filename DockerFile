@@ -1,0 +1,13 @@
+FROM golang
+
+WORKDIR /PasswordGenerator
+
+ADD . /go/src/PasswordGenerator
+
+RUN go install PasswordGenerator/cmd/server
+
+RUN go install PasswordGenerator/cmd/cli
+
+ENTRYPOINT /go/bin/server
+
+EXPOSE 8000
