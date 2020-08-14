@@ -1,6 +1,6 @@
 1) make packages: api (handler, middleware), domain (structs), service (PasswordGenerator), cmd (cli for access to service)
     structure cmd(server(main.go), cli(main.go)), api(), domain(), service()) (optional: Package cobra) !DONE!
 2) add DockerFile to build image for server and cli !DONE! /* for running cli prog from docker "docker exec -w /go/bin pass cli [params]" */
-3) add MakeFile, which would call docker and run container 
+3) add MakeFile, which would call docker and run container
 4) test coverage (unit tests)
 5) use goModule (create VendorFolder)
